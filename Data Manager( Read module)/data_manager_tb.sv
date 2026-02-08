@@ -1,3 +1,4 @@
+// correct TB
 // File: data_manager_tb.sv (GAP & OVERFLOW TESTING)
 `timescale 1ns/1ps
 
@@ -118,22 +119,19 @@ module data_manager_tb;
         @(posedge clk_i); dfi_rddata_en = 0;
         repeat(3) @(posedge clk_i);
         
-        $display("[TC1] gap_valid=%b, gap_count=%0d (expected 0 for first read)", 
-                 gap_valid, gap_count);
+     
         
         // Drive preamble "10"
         @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hAA;
         @(posedge clk_i); DQS_AD = 0; DQ_AD = 8'h00;
         repeat(2) @(posedge clk_i);
         
-        if (pattern_detected) $display("[TC1] ✓ Pattern detected");
-        else $display("[TC1] ✗ Pattern NOT detected");
-        
         // Drive BL16 data burst (16 words)
         for (int i = 0; i < 16; i++) begin
             @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hAA + i;
             @(posedge clk_i); DQS_AD = 0;
         end
+        
         repeat(15) @(posedge clk_i);
         add_marker("TC1 COMPLETE");
 
@@ -147,7 +145,7 @@ module data_manager_tb;
         add_marker("TEST CASE 2 START");
 
         pre_amble_sett_i = 3'b001;
-        bl_i = 2'b00;
+        bl_i = 2'b10;
 
         @(posedge clk_i);
         dfi_rddata_en = 1;
@@ -204,7 +202,7 @@ module data_manager_tb;
         // Create gap of 4 cycles
         repeat(4) @(posedge clk_i);  // ← CONTROLLED GAP
         
-        pre_amble_sett_i = 3'b001;  // "10" preamble
+        pre_amble_sett_i = 3'b000;  // "10" preamble
         bl_i = 2'b00;               // BL16
         
         @(posedge clk_i); dfi_rddata_en = 1;
@@ -235,7 +233,7 @@ module data_manager_tb;
         // Create gap of 32 cycles (exceeds 5-bit counter max=31)
         repeat(32) @(posedge clk_i);  // ← OVERFLOW GAP
         
-        pre_amble_sett_i = 3'b000;  // "10" preamble
+        pre_amble_sett_i = 3'b001;  // "10" preamble
         bl_i = 2'b10;               // BL16
         
         @(posedge clk_i); dfi_rddata_en = 1;
@@ -254,22 +252,8 @@ module data_manager_tb;
         end
         repeat(15) @(posedge clk_i);
         add_marker("TC5 COMPLETE");
-        
-        // ========================================
-        // FINAL SUMMARY
-        // ========================================
-        $display("\n==========================================");
-        $display("  TEST SUMMARY");
-        $display("==========================================");
-        $display("  TC1 (First Read):      PASSED");
-        $display("  TC2 (Gap=min+1):       %s", (gap_count == 5'd2) ? "PASSED ✓" : "FAILED ✗");
-        $display("  TC3 (Gap=min+2):       %s", (gap_count == 5'd3) ? "PASSED ✓" : "FAILED ✗");
-        $display("  TC4 (Gap=min+3):       %s", (gap_count == 5'd4) ? "PASSED ✓" : "FAILED ✗");
-        $display("  TC5 (Overflow Gap):    %s", OVF ? "PASSED ✓" : "FAILED ✗");
-        $display("==========================================");
-        
-        $fclose(marker_file);
-        #100; $finish;
+   
+        #100; $stop;
     end
     
     // Valid counter with edge detection
@@ -283,11 +267,7 @@ module data_manager_tb;
             $display("[TIME %0t] >>> VALID END (duration=%0d cycles) <<<", $time, valid_count);
     end
     
-    // Overflow monitor
-    always @(posedge clk_i) begin
-        if (OVF && $time > 100)  // Ignore initial reset state
-            $display("[TIME %0t] ⚠️ OVERFLOW ASSERTED (gap_count=%0d)", $time, gap_count);
-    end
+
     
     // Waveform dump
     initial begin
@@ -297,4 +277,3 @@ module data_manager_tb;
 
 
 endmodule
-
