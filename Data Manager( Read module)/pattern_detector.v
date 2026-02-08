@@ -6,6 +6,7 @@ module pattern_detector (
     input en_i,
     input DQS_AD,
     input [2:0] pre_amble_sett_i,
+    input post_amble_sett_i,
     output reg pattern_detected
 );
     reg [8:1] shift_reg;
@@ -78,4 +79,5 @@ module pattern_detector (
         end
     end
 endmodule
+
 
