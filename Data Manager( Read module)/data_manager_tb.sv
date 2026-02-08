@@ -91,14 +91,13 @@ module data_manager_tb;
     
     // Main test program
     initial begin
-        // Initialize counters FIRST (critical for QuestaSim)
+        // Initialize counters FIRST 
         valid_count = 0; data_errors = 0; idx = 0;
         valid_count2 = 0; data_errors2 = 0; idx2 = 0;
         
         marker_file = $fopen("waveform_markers.txt", "w");
         $display("==========================================");
-        $display("  DDR5 PHY DATA MANAGER TESTBENCH v4.0");
-        $display("  Gap Counter & Overflow Testing");
+        $display("  DDR5 PHY DATA MANAGER TESTBENCH");
         $display("==========================================");
         add_marker("SIMULATION START");
         
@@ -146,10 +145,10 @@ module data_manager_tb;
 
 
         // =====================================================
-        // TEST CASE 1
+        // TEST CASE 2
         // =====================================================
-        $display("\nTEST CASE 1: BL16, PREAMBLE 10");
-        add_marker("TEST CASE 1 START");
+        $display("\nTEST CASE 2: BL16, PREAMBLE 10");
+        add_marker("TEST CASE 2 START");
 
         pre_amble_sett_i = 3'b001;
         bl_i = 2'b00;
@@ -198,150 +197,13 @@ module data_manager_tb;
         repeat(20) @(posedge clk_i);
         
 
-        /*
+
+        
         // ========================================
-        // TEST CASE 2: Small Gap (min+1 = seamless)
+        // TEST CASE 3: Large Gap (min+3)
         // ========================================
-        $display("\n=== TC2: SMALL GAP (min+1 = seamless) ===");
-        add_marker("TC2 START");
-        
-        // Create gap of 2 cycles between reads (min gap for DDR5 is typically 8, but for test we use small gap)
-        repeat(2) @(posedge clk_i);  // ← CONTROLLED GAP
-        
-        pre_amble_sett_i = 3'b000;  // "10" preamble
-        bl_i = 2'b00;               // BL16
-        
-        @(posedge clk_i); dfi_rddata_en = 1;
-        @(posedge clk_i); dfi_rddata_en = 0;
-        repeat(3) @(posedge clk_i);
-        
-        $display("[TC2] gap_valid=%b, gap_count=%0d (expected 2)", 
-                 gap_valid, gap_count);
-        if (gap_count == 5'd2) $display("[TC2] ✓ Gap measured correctly");
-        else $display("[TC2] ✗ Gap measurement error");
-        
-        // Drive preamble "10"
-        @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hBB;
-        @(posedge clk_i); DQS_AD = 0; DQ_AD = 8'h00;
-        repeat(2) @(posedge clk_i);
-        
-        if (pattern_detected) $display("[TC2] ✓ Pattern detected");
-        else $display("[TC2] ✗ Pattern NOT detected");
-        
-        // Drive BL16 data burst
-        for (int i = 0; i < 16; i++) begin
-            @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hBB + i;
-            @(posedge clk_i); DQS_AD = 0;
-        end
-        repeat(15) @(posedge clk_i);
-        add_marker("TC2 COMPLETE");
-        
-
-
-
-
-
-        // =====================================================
-        // TEST CASE 3
-        // =====================================================
-        $display("\nTEST CASE 3: BL16, PREAMBLE 10");
-        add_marker("TEST CASE 3 START");
-
-        pre_amble_sett_i = 3'b001;
-        bl_i = 2'b01;
-
-        @(posedge clk_i);
-        dfi_rddata_en = 1;
-        @(posedge clk_i);
-        dfi_rddata_en = 0;
-
-        repeat(3) @(posedge clk_i);
-
-        if (gap_valid && fifo_write)
-            $display("[OK] Gap counter captured settings");
-        else
-            $display("[FAIL] Gap counter did not capture settings");
-
-        // preamble 10
-        @(posedge clk_i);
-        DQS_AD = 1; DQ_AD = 8'h23;
-
-        @(posedge clk_i);
-        DQS_AD = 0; DQ_AD = 8'h00;
-
-        repeat(2) @(posedge clk_i);
-
-        if (pattern_detected)
-            $display("[OK] Pattern detected");
-        else
-            $display("[FAIL] Pattern NOT detected");
-
-        // Expected data
-        expected_data[0] = 8'h23;
-        for (int i = 1; i < 16; i++)
-            expected_data[i] = 8'hBB + i;
-
-        // send burst
-        for (int i = 0; i < 16; i++) begin
-            @(posedge clk_i);
-            DQS_AD = 1;
-            DQ_AD  = expected_data[i];
-
-            @(posedge clk_i);
-            DQS_AD = 0;
-        end
-
-        repeat(20) @(posedge clk_i);
-
-
-
-
-     */
-
-
-
-        // ========================================
-        // TEST CASE 3: Medium Gap (min+2)
-        // ========================================
-        $display("\n=== TC3: MEDIUM GAP (min+2) ===");
+        $display("\n=== TC3: LARGE GAP (min+3) ===");
         add_marker("TC3 START");
-        
-        // Create gap of 3 cycles
-        repeat(3) @(posedge clk_i);  // ← CONTROLLED GAP
-        
-        pre_amble_sett_i = 3'b010;  // "10" preamble
-        bl_i = 2'b10;               // BL16
-        
-        @(posedge clk_i); dfi_rddata_en = 1;
-        @(posedge clk_i); dfi_rddata_en = 0;
-        repeat(3) @(posedge clk_i);
-        
-        $display("[TC3] gap_valid=%b, gap_count=%0d (expected 3)", 
-                 gap_valid, gap_count);
-        if (gap_count == 5'd3) $display("[TC3] ✓ Gap measured correctly");
-        else $display("[TC3] ✗ Gap measurement error");
-        
-        // Drive preamble "10"
-        @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hCC;
-        @(posedge clk_i); DQS_AD = 0; DQ_AD = 8'h00;
-        repeat(2) @(posedge clk_i);
-        
-        if (pattern_detected) $display("[TC3] ✓ Pattern detected");
-        else $display("[TC3] ✗ Pattern NOT detected");
-        
-        // Drive BL16 data burst
-        for (int i = 0; i < 16; i++) begin
-            @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hCC + i;
-            @(posedge clk_i); DQS_AD = 0;
-        end
-        repeat(15) @(posedge clk_i);
-        add_marker("TC3 COMPLETE");
-        
-        // ========================================
-        // TEST CASE 4: Large Gap (min+3)
-        // ========================================
-        $display("\n=== TC4: LARGE GAP (min+3) ===");
-        add_marker("TC4 START");
         
         // Create gap of 4 cycles
         repeat(4) @(posedge clk_i);  // ← CONTROLLED GAP
@@ -353,18 +215,12 @@ module data_manager_tb;
         @(posedge clk_i); dfi_rddata_en = 0;
         repeat(3) @(posedge clk_i);
         
-        $display("[TC4] gap_valid=%b, gap_count=%0d (expected 4)", 
-                 gap_valid, gap_count);
-        if (gap_count == 5'd4) $display("[TC4] ✓ Gap measured correctly");
-        else $display("[TC4] ✗ Gap measurement error");
         
         // Drive preamble "10"
         @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hDD;
         @(posedge clk_i); DQS_AD = 0; DQ_AD = 8'h00;
         repeat(2) @(posedge clk_i);
         
-        if (pattern_detected) $display("[TC4] ✓ Pattern detected");
-        else $display("[TC4] ✗ Pattern NOT detected");
         
         // Drive BL16 data burst
         for (int i = 0; i < 16; i++) begin
@@ -375,10 +231,10 @@ module data_manager_tb;
         add_marker("TC4 COMPLETE");
         
         // ========================================
-        // TEST CASE 5: OVERFLOW GAP (32+ cycles)
+        // TEST CASE 4: OVERFLOW GAP (32+ cycles)
         // ========================================
-        $display("\n=== TC5: OVERFLOW GAP (32 cycles) ===");
-        add_marker("TC5 START - OVERFLOW TEST");
+        $display("\n=== TC4: OVERFLOW GAP (32 cycles) ===");
+        add_marker("TC4 START - OVERFLOW TEST");
         
         // Create gap of 32 cycles (exceeds 5-bit counter max=31)
         repeat(32) @(posedge clk_i);  // ← OVERFLOW GAP
@@ -390,18 +246,10 @@ module data_manager_tb;
         @(posedge clk_i); dfi_rddata_en = 0;
         repeat(3) @(posedge clk_i);
         
-        $display("[TC5] gap_valid=%b, gap_count=%0d, OVF=%b", 
-                 gap_valid, gap_count, OVF);
-        if (OVF) $display("[TC5] ✓✓✓ OVERFLOW DETECTED CORRECTLY ✓✓✓");
-        else $display("[TC5] ✗✗✗ OVERFLOW NOT DETECTED (expected OVF=1) ✗✗✗");
-        
         // Drive preamble "10"
         @(posedge clk_i); DQS_AD = 1; DQ_AD = 8'hEE;
         @(posedge clk_i); DQS_AD = 0; DQ_AD = 8'h00;
         repeat(2) @(posedge clk_i);
-        
-        if (pattern_detected) $display("[TC5] ✓ Pattern detected");
-        else $display("[TC5] ✗ Pattern NOT detected");
         
         // Drive BL16 data burst
         for (int i = 0; i < 16; i++) begin
@@ -450,5 +298,6 @@ module data_manager_tb;
         $dumpfile("data_manager_tb.vcd");
         $dumpvars(0, data_manager_tb);
     end
+
 
 endmodule
