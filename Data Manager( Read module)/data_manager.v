@@ -1,14 +1,5 @@
 
-
-
-
-
-
-
-
-
-
-// File: data_manager.v (FINAL CORRECTED)
+// File: data_manager.v 
 `timescale 1ns/1ps
 
 module data_manager (
@@ -85,6 +76,7 @@ module data_manager (
         .en_i(en_i),
         .DQS_AD(DQS_AD),            
         .pre_amble_sett_i(saved_pre_amble_o),
+        .post_amble_sett_i(saved_post_amble_o),
         .pattern_detected(pattern_detected)
         
     );
@@ -234,3 +226,4 @@ module data_manager (
     end
 
 endmodule
+
