@@ -1,4 +1,4 @@
-// File: pattern_detector.v (CORRECTED - ALL REG DECLARATIONS)
+// File: pattern_detector.v 
 `timescale 1ns/1ps
 module pattern_detector (
     input clk_i,
@@ -79,5 +79,6 @@ module pattern_detector (
         end
     end
 endmodule
+
 
 
