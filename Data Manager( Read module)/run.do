@@ -15,7 +15,7 @@ vmap work work
 echo "Compiling design files..."
 vlog -work work count_calc.v
 vlog -work work valid_counter.v
-vlog -work work setting_generator.v
+
 vlog -work work pattern_detector.v
 vlog -work work gap_counter.v
 vlog -work work data_manager.v
@@ -97,6 +97,7 @@ echo "========================================="
 echo "Simulation completed!"
 echo "Check the waveform window for results"
 echo "========================================="
+
 
 
 
