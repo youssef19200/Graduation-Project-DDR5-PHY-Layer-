@@ -1,5 +1,5 @@
 
-// File: data_manager.v (FINAL CORRECTED)
+// File: data_manager.v (CORRECTED - PROPER INTERAMBLE LOGIC)
 `timescale 1ns/1ps
 
 module data_manager (
@@ -26,7 +26,7 @@ module data_manager (
     output reg saved_post_amble_o,
     output reg saved_read_crc_enable_o,
     output reg saved_phy_crc_mode_o
-    );
+);
 
     // =====================================================
     // FSM states
@@ -39,7 +39,6 @@ module data_manager (
     reg [1:0] current_state;
     reg [1:0] next_state;
      
-     
     // =====================================================
     // Internal wires
     // =====================================================
@@ -49,14 +48,24 @@ module data_manager (
     wire [4:0] gap_count;
     wire fifo_write;
     wire gap_reset;
+    wire pre_or_inter;  // 1=preamble (first read), 0=interamble (subsequent reads)
     
     // Count calculation signals
     wire [4:0] count_val;
     reg seamless_flag;              
     wire valid_counter_done;
-    assign pattern_detector_en = en_i && !dfi_rddata_valid && !fifo_write; 
+
+    // CRITICAL FIX #1: Enable pattern detector EXCEPT during data sampling
+    assign pattern_detector_en = en_i && !dfi_rddata_valid;
+    
+    // CRITICAL FIX #2: Correct pre_or_inter logic (DDR5 spec compliant)
+    //   • First read (gap_valid=0) → preamble (pre_or_inter=1)
+    //   • Subsequent reads (gap_valid=1) → interamble (pre_or_inter=0)
+    //   NOTE: gap size determines WHICH interamble pattern, NOT whether it's preamble/interamble
+    assign pre_or_inter = !gap_valid ? 1'b1 : 1'b0;
+
     // =====================================================
-    // GAP COUNTER (CORRECT PORT CONNECTIONS)
+    // GAP COUNTER
     // =====================================================
     gap_counter u_gap_counter (
         .clk(clk_i),
@@ -70,7 +79,7 @@ module data_manager (
     );
     
     // =====================================================
-    // PATTERN DETECTOR (MATCHES YOUR ACTUAL MODULE PORTS)
+    // PATTERN DETECTOR (FULL INTERAMBLE SUPPORT)
     // =====================================================
     pattern_detector u_pattern_detector (
         .clk_i(clk_i),
@@ -79,18 +88,10 @@ module data_manager (
         .DQS_AD(DQS_AD),            
         .pre_amble_sett_i(saved_pre_amble_o),
         .post_amble_sett_i(saved_post_amble_o),
+        .gap_i(gap_count),          // Pass gap for interamble pattern selection
+        .pre_or_inter(pre_or_inter), // 1=preamble, 0=interamble
         .pattern_detected(pattern_detected)
-        
     );
-
-   //pattern_detector u_pattern_detector (
-   // .clk_i(clk_i),
-   // .reset_n_i(reset_n_i),
-   // .en_i(en_i),
-   // .DQS_AD(DQS_AD),
-   // .pre_amble_sett_i(saved_pre_amble_o),  // Use SAVED settings
-   // .pattern_detected(pattern_detected)
-   //  );
 
     // =====================================================
     // COUNT CALCULATOR
@@ -155,7 +156,6 @@ module data_manager (
         else if (!en_i)
             current_state <= IDLE;
         else
-         
             current_state <= next_state;
     end
    
@@ -163,7 +163,6 @@ module data_manager (
     // FSM combinational logic
     // =====================================================
     always @(*) begin
-       
         next_state = current_state;
 
         case (current_state)
@@ -210,11 +209,8 @@ module data_manager (
         end
         else if (current_state == SAMPLING) begin
             dfi_rddata <= DQ_AD;
-            
-            
         end
     end
-    
 
     // =====================================================
     // VALID generation
