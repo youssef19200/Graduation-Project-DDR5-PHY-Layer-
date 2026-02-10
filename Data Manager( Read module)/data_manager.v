@@ -55,10 +55,10 @@ module data_manager (
     reg seamless_flag;              
     wire valid_counter_done;
 
-    // CRITICAL FIX #1: Enable pattern detector EXCEPT during data sampling
+    //Enable pattern detector EXCEPT during data sampling
     assign pattern_detector_en = en_i && !dfi_rddata_valid;
     
-    // CRITICAL FIX #2: Correct pre_or_inter logic (DDR5 spec compliant)
+    // Correct pre_or_inter logic (DDR5 spec compliant)
     //   • First read (gap_valid=0) → preamble (pre_or_inter=1)
     //   • Subsequent reads (gap_valid=1) → interamble (pre_or_inter=0)
     //   NOTE: gap size determines WHICH interamble pattern, NOT whether it's preamble/interamble
@@ -228,3 +228,4 @@ module data_manager (
     end
 
 endmodule
+
